@@ -8,18 +8,30 @@ import { useState } from "react";
 
 function App() {
   const [items, setItems] = useState([]);
+
   function handleAddItems(item) {
     setItems((items) => [...items, item]);
   }
   function handleDeleteItem(id) {
     setItems((items) => items.filter((item) => item.id !== id));
   }
+  function handleToggleItem(id) {
+    setItems((items) =>
+      items.map((item) =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
   return (
     <div className="app">
       <Logo />
       <Form onAddItems={handleAddItems} />
-      <PackingList items={items} onDeleteItem={handleDeleteItem} />
-      <Stats />
+      <PackingList
+        items={items}
+        onDeleteItem={handleDeleteItem}
+        onToogleItems={handleToggleItem}
+      />
+      <Stats items={items} />
     </div>
   );
 }
@@ -61,20 +73,30 @@ function Form({ onAddItems }) {
     </form>
   );
 }
-function PackingList({ items, onDeleteItem }) {
+function PackingList({ items, onDeleteItem, onToogleItems }) {
   return (
     <div className="list">
       <ul>
         {items.map((item) => (
-          <Item item={item} key={item.id} onDeleteItem={onDeleteItem} />
+          <Item
+            item={item}
+            key={item.id}
+            onDeleteItem={onDeleteItem}
+            onToogleItems={onToogleItems}
+          />
         ))}
       </ul>
     </div>
   );
 }
-function Item({ item, onDeleteItem }) {
+function Item({ item, onDeleteItem, onToogleItems }) {
   return (
     <li>
+      <input
+        type="checkbox"
+        value={item.packed}
+        onChange={() => onToogleItems(item.id)}
+      />
       <span style={item.packed ? { textDecoration: "line-through" } : {}}>
         {item.quantity} {item.description}
       </span>
@@ -82,10 +104,18 @@ function Item({ item, onDeleteItem }) {
     </li>
   );
 }
-function Stats() {
+function Stats({ items }) {
+  const numItems = items.length;
+  const numPacked = items.filter((item) => item.packed).length;
+  const numPercent = Math.round((numPacked / numItems) * 100);
   return (
     <footer className="stats">
-      <em>Yout have X items on your list and you pack X% already</em>
+      <em>
+        {numPercent === 100
+          ? `You are ready to GO!!`
+          : ` Yout have ${numItems} items on your list and you already pack ${numPacked}
+          (${numPercent}%)`}
+      </em>
     </footer>
   );
 }
